@@ -5,6 +5,7 @@ import pandas as pd
 import streamlit as st
 from fpdf import FPDF
 from docx import Document
+from docx.shared import Inches, Pt
 
 def scrape_taux_change_beac_optimise():
     url = "https://www.beac.int/"
@@ -44,6 +45,7 @@ def scrape_taux_change_beac_optimise():
         'XOF': {'CODE': '002', 'INTITULE': 'FRANC CFA UEMOA'}
     }
 
+
     df['CODE'] = df['SYMBOLE'].map(lambda x: mapping.get(x, {}).get('CODE', ''))
     df['INTITULE'] = df['SYMBOLE'].map(lambda x: mapping.get(x, {}).get('INTITULE', ''))
 
@@ -51,69 +53,77 @@ def scrape_taux_change_beac_optimise():
     date_source = date_div.get_text(strip=True) if date_div else 'Date inconnue'
     return df[['CODE', 'SYMBOLE', 'INTITULE', 'ACHAT', 'VENTE']].reset_index(drop=True), date_source, url
 
-def export_to_pdf(df, date_source, url, file_path):
+def export_to_pdf(df, date_source, url, file_path, logo_path=None):
     pdf = FPDF()
     pdf.add_page()
+    if logo_path:
+        pdf.image(logo_path, x=10, y=8, w=30)
+        pdf.ln(20)
     pdf.set_font("Arial", size=12)
-
     pdf.cell(200, 10, txt="Taux de Change - BEAC", ln=True, align='C')
     pdf.cell(200, 10, txt=f"Date de publication : {date_source}", ln=True)
     pdf.cell(200, 10, txt=f"Source : {url}", ln=True)
-
     pdf.ln(10)
-    col_width = 38
-    for col in df.columns:
-        pdf.cell(col_width, 10, txt=col, border=1)
+
+    col_widths = [20, 25, 60, 30, 30]
+    headers = ['CODE', 'SYMBOLE', 'INTITULE', 'ACHAT', 'VENTE']
+    for i, h in enumerate(headers):
+        pdf.cell(col_widths[i], 10, h, border=1)
     pdf.ln()
 
-    for index, row in df.iterrows():
-        for item in row:
-            pdf.cell(col_width, 10, txt=str(item), border=1)
+    for _, row in df.iterrows():
+        for i, key in enumerate(headers):
+            txt = str(row[key])[:18]
+            pdf.cell(col_widths[i], 10, txt, border=1)
         pdf.ln()
-
     pdf.output(file_path)
 
-def export_to_docx(df, date_source, url, file_path):
+def export_to_docx(df, date_source, url, file_path, logo_path=None):
     doc = Document()
-    doc.add_heading('Taux de Change - BEAC', 0)
+    if logo_path:
+        doc.add_picture(logo_path, width=Inches(1.0))
+    doc.add_heading('Taux de Change - BEAC', level=1)
     doc.add_paragraph(f"Date de publication : {date_source}")
     doc.add_paragraph(f"Source : {url}")
+    doc.add_paragraph(" ")
 
     table = doc.add_table(rows=1, cols=len(df.columns))
+    table.style = 'Table Grid'
     hdr_cells = table.rows[0].cells
     for i, col in enumerate(df.columns):
-        hdr_cells[i].text = col
+        run = hdr_cells[i].paragraphs[0].add_run(col)
+        run.bold = True
 
     for _, row in df.iterrows():
         row_cells = table.add_row().cells
-        for i, item in enumerate(row):
-            row_cells[i].text = str(item)
+        for i, val in enumerate(row):
+            row_cells[i].text = str(val)
 
     doc.save(file_path)
 
 def main():
     st.title("💱 Taux de change - BEAC")
     st.write("Application de scraping automatique des taux de change publiés par la BEAC.")
-
     df, date_source, source_url = scrape_taux_change_beac_optimise()
-
     st.success("Scraping terminé avec succès !")
-    st.markdown(f"**📅 Date de publication :** {date_source}")
+    st.markdown(f"**📅 ** {date_source}")
     st.markdown(f"**🔗 Source :** [Site de la BEAC]({source_url})")
     st.dataframe(df, use_container_width=True)
+
+    logo_path = "afriland_logo.jpg"  # À remplacer par ton image
 
     col1, col2 = st.columns(2)
     with col1:
         if st.button("📥 Télécharger en PDF"):
             pdf_path = "taux_beac.pdf"
-            export_to_pdf(df, date_source, source_url, pdf_path)
+            export_to_pdf(df, date_source, source_url, pdf_path, logo_path)
             with open(pdf_path, "rb") as f:
                 st.download_button("Télécharger PDF", f, file_name=pdf_path)
 
     with col2:
         if st.button("📥 Télécharger en Word"):
             doc_path = "taux_beac.docx"
-            export_to_docx(df, date_source, source_url, doc_path)
+            export_to_docx(df, date_source, source_url, doc_path, logo_path)
             with open(doc_path, "rb") as f:
                 st.download_button("Télécharger DOCX", f, file_name=doc_path)
 
