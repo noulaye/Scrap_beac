@@ -28,19 +28,20 @@ def scrape_taux_change_beac_optimise():
     df['SYMBOLE'] = df['PAIRE DEVISES'].str.extract(r'([A-Z]{3})')
 
     mapping = {
-        'EUR': {'CODE': 290, 'INTITULE': 'EURO'},
-        'USD': {'CODE': 340, 'INTITULE': 'DOLLAR US'},
-        'GBP': {'CODE': 260, 'INTITULE': 'LIVRE STERLING'},
-        'CHF': {'CODE': 710, 'INTITULE': 'FRANC SUISSE'},
-        'JPY': {'CODE': 350, 'INTITULE': 'YEN JAPONAIS'},
-        'CAD': {'CODE': 330, 'INTITULE': 'DOLLAR CANADIEN'},
-        'SEK': {'CODE': 310, 'INTITULE': 'COURONNE SUEDOISE'},
-        'ZAR': {'CODE': 360, 'INTITULE': 'RAND SUD-AFRICAIN'},
+        'EUR': {'CODE': '290', 'INTITULE': 'EURO'},
+        'USD': {'CODE': '340', 'INTITULE': 'DOLLAR US'},
+        'GBP': {'CODE': '260', 'INTITULE': 'LIVRE STERLING'},
+        'CHF': {'CODE': '710', 'INTITULE': 'FRANC SUISSE'},
+        'JPY': {'CODE': '350', 'INTITULE': 'YEN JAPONAIS'},
+        'CAD': {'CODE': '330', 'INTITULE': 'DOLLAR CANADIEN'},
+        'SEK': {'CODE': '310', 'INTITULE': 'COURONNE SUEDOISE'},
+        'ZAR': {'CODE': '360', 'INTITULE': 'RAND SUD-AFRICAIN'},
         'MAD': {'CODE': '', 'INTITULE': 'DIRHAM MAROCAIN'},
-        'SAR': {'CODE': 602, 'INTITULE': 'RIYAL SAOUDIEN'},
+        'SAR': {'CODE': '602', 'INTITULE': 'RIYAL SAOUDIEN'},
         'AED': {'CODE': '', 'INTITULE': 'DIRHAM EAU'},
-        'DKK': {'CODE': '', 'INTITULE': 'COURONNE DANOISE'},
-        'XOF': {'CODE': 2, 'INTITULE': 'FRANC CFA UEMOA'}
+        'CNY': {'CODE': '', 'INTITULE': 'RENMINBI'},
+        'DKK': {'CODE': '240', 'INTITULE': 'COURONNE DANOISE'},
+        'XOF': {'CODE': '002', 'INTITULE': 'FRANC CFA UEMOA'}
     }
 
     df['CODE'] = df['SYMBOLE'].map(lambda x: mapping.get(x, {}).get('CODE', ''))
